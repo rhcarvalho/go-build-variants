@@ -54,7 +54,7 @@ func (c *Config) Cmd() *exec.Cmd {
 }
 
 func (c *Config) OutputPath() string {
-	name := fmt.Sprintf("%s-%s-%s-%slnk", c.Name, strings.ReplaceAll(c.GoVersion, ".", ""), c.GOOS, c.LinkMode[:3])
+	name := fmt.Sprintf("%s-%s-%s-%slnk", c.Name, c.GoVersion, c.GOOS, c.LinkMode[:3])
 	if c.StripDebug {
 		name += "-strip"
 	}
