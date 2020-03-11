@@ -149,6 +149,7 @@ func main() {
 	}
 }
 
+// upx compresses an executable with upx, leaving the original intact.
 func upx(exe string) {
 	out := strings.TrimSuffix(exe, ".exe")
 	out += "-upx"
