@@ -62,6 +62,11 @@ func (c *Config) OutputPath() string {
 		name += "-trimpath"
 	}
 
+	// Append a hash of the config to the file name such that whenever the
+	// config changes we generate a new name, regardless of other parts of the
+	// file name. We ignore the c.BuildTime, otherwise every build would have a
+	// different hash. The intention is that rebuilding the same configuration
+	// overwrites an old output binary.
 	snapshot := *c
 	snapshot.BuildTime = time.Time{}
 	b, err := json.Marshal(snapshot)
