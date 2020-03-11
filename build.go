@@ -18,11 +18,18 @@ import (
 	"time"
 )
 
+var versions = []string{
+	"go1.10.8",
+	"go1.11.13",
+	"go1.12.17",
+	"go1.13.8",
+	"go1.14",
+}
+
 const out = "dist"
 
 type Config struct {
 	Name       string
-	GoExe      string
 	GoVersion  string
 	GOOS       string
 	LinkMode   string
@@ -49,7 +56,7 @@ func (c *Config) Cmd() *exec.Cmd {
 		args = append(args, "-trimpath")
 	}
 	args = append(args, "main.go")
-	cmd := exec.Command(c.GoExe, args...)
+	cmd := exec.Command(c.GoVersion, args...)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("GOOS=%s", c.GOOS))
 	return cmd
 }
@@ -100,12 +107,16 @@ func main() {
 	hasUPX := exec.Command("upx", "-V").Run() == nil
 
 	sem := make(chan struct{}, runtime.NumCPU())
-	for _, exe := range []string{"go1.10", "go1.11", "go1.12", "go1.13", "go"} {
+	for _, exe := range versions {
 		for _, GOOS := range []string{"linux", "darwin", "windows"} {
 			for _, trimpath := range []bool{false, true} {
 				for _, linkmode := range []string{"internal", "external"} {
 					for _, strip := range []bool{false, true} {
 						version := goVersion(exe)
+						if version != exe {
+							panic(fmt.Errorf("inconsistent go version: exe=%q, version=%q", exe, version))
+						}
+
 						v, err := strconv.Atoi(strings.Split(version, ".")[1])
 						if err != nil {
 							panic(err)
@@ -120,7 +131,6 @@ func main() {
 						}
 						cfg := Config{
 							Name:       name,
-							GoExe:      exe,
 							GoVersion:  version,
 							GOOS:       GOOS,
 							LinkMode:   linkmode,
