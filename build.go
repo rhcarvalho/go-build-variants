@@ -103,8 +103,9 @@ func goVersion(exe string) string {
 func main() {
 	buildTime := time.Now()
 	name := "hello"
-
 	hasUPX := exec.Command("upx", "-V").Run() == nil
+
+	installMissingToolchains(versions)
 
 	sem := make(chan struct{}, runtime.NumCPU())
 	for _, exe := range versions {
@@ -154,6 +155,24 @@ func main() {
 	}
 	for n := cap(sem); n > 0; n-- {
 		sem <- struct{}{}
+	}
+}
+
+// installMissingToolchains takes a list of Go versions (in go1.x[.x] format)
+// and installs toolchains that are not available locally.
+func installMissingToolchains(versions []string) {
+	for _, version := range versions {
+		installed := func() string {
+			defer func() {
+				recover()
+			}()
+			return goVersion(version)
+		}()
+		if installed != version {
+			fmt.Println("installing", version)
+			mustRun("go", "get", "golang.org/dl/"+version)
+			mustRun(version, "download")
+		}
 	}
 }
 
