@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -130,10 +131,7 @@ func main() {
 						sem <- struct{}{}
 						go func() {
 							fmt.Println(cfg.OutputPath())
-							if b, err := cfg.Cmd().CombinedOutput(); err != nil {
-								fmt.Printf("**Config**\n%+v\n**Output**\n%s\n", cfg, b)
-								panic(err)
-							}
+							mustRunCmd(cfg.Cmd())
 							if hasUPX {
 								upx(cfg.OutputPath())
 							}
@@ -157,9 +155,22 @@ func upx(exe string) {
 		out += ".exe"
 	}
 	fmt.Println(out)
-	cmd := exec.Command("upx", "-qq", "-f", "-o", out, exe)
+	mustRun("upx", "-qq", "-f", "-o", out, exe)
+}
+
+// mustRun runs the command with the given name and arguments and panics if the
+// execution failed.
+func mustRun(name string, arg ...string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, name, arg...)
+	mustRunCmd(cmd)
+}
+
+// mustRunCmd runs the cmd command and panics if the execution failed.
+func mustRunCmd(cmd *exec.Cmd) {
 	if b, err := cmd.CombinedOutput(); err != nil {
-		fmt.Printf("**Input**\n%+v\n**Output**\n%s\n", exe, b)
+		fmt.Fprintf(os.Stderr, "$ %s\n%s\n^^^\n", cmd, b)
 		panic(err)
 	}
 }
