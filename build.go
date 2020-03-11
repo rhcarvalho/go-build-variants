@@ -93,7 +93,7 @@ func goVersion(exe string) string {
 }
 
 func main() {
-	start := time.Now()
+	buildTime := time.Now()
 	name := "hello"
 
 	hasUPX := exec.Command("upx", "-V").Run() == nil
@@ -125,7 +125,7 @@ func main() {
 							LinkMode:   linkmode,
 							StripDebug: strip,
 							TrimPath:   trimpath,
-							BuildTime:  start,
+							BuildTime:  buildTime,
 						}
 						sem <- struct{}{}
 						go func() {
